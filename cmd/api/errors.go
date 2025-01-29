@@ -10,7 +10,7 @@ func (app *application) logError(r *http.Request, err error) {
 }
 
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {
-	env := envelop{"error": message}
+	env := envelope{"error": message}
 	err := app.writeJson(w, status, env, nil)
 	if err != nil {
 		app.logError(r, err)
@@ -21,7 +21,7 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 
 func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	//app.logError(r, err)
-	message := "something wrong happened !"
+	message := "server error response"
 	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 

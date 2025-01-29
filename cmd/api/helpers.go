@@ -21,9 +21,9 @@ func (app *application) readIDparam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-type envelop map[string]interface{}
+type envelope map[string]interface{}
 
-func (app *application) writeJson(w http.ResponseWriter, status int, data envelop, headers http.Header) error {
+func (app *application) writeJson(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 
 	//  i want to hilight that json encoder dont use heap memory allocation as same as Marshal
 	js, err := json.Marshal(data)
@@ -89,6 +89,8 @@ func (app *application) readJson(w http.ResponseWriter, r *http.Request, dst int
 		}
 
 	}
+
+	// check there is only one struct per request
 	err = dec.Decode(&struct{}{})
 	if err != io.EOF {
 		return errors.New("one JSON Object allowed ")

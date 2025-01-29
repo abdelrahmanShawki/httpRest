@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/lib/pq"
+	"httpRest/internal/data"
 	"log"
 	"net/http"
 	"os"
@@ -28,6 +29,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func openDB(cfg config) (*sql.DB, error) {
@@ -73,6 +75,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModel(db),
 	}
 
 	srv := &http.Server{
