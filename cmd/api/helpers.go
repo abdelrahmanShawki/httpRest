@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"httpRest/internal/validator"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -73,10 +75,10 @@ func (app *application) readJson(w http.ResponseWriter, r *http.Request, dst int
 
 		case errors.Is(err, io.EOF):
 			return errors.New("body must not be empty")
-			// check the error that returned by disableUnkownFields
+			// check the error that returned by disableUnknownFields
 		case strings.HasPrefix(err.Error(), "json: unknown field"):
 			fieldname := strings.TrimPrefix(err.Error(), "json: unknown field")
-			fmt.Errorf("this JSON field isnt compatable with our system %s ", fieldname)
+			_ = fmt.Errorf("this JSON field isnt compatable with our system %s ", fieldname)
 			//passing nil or non pointer
 		case errors.As(err, &InvalidUnmarshalTypeError):
 			panic(err)
@@ -96,4 +98,34 @@ func (app *application) readJson(w http.ResponseWriter, r *http.Request, dst int
 		return errors.New("one JSON Object allowed ")
 	}
 	return nil
+}
+
+func (app *application) readString(urlQuery url.Values, key string, defaultString string) string {
+	str := urlQuery.Get(key)
+	if str == "" {
+		return defaultString
+	}
+	return str
+}
+func (app *application) readCVS(queryString url.Values, key string, defaultString []string) []string {
+	commaSeperatedValues := queryString.Get(key)
+	if commaSeperatedValues == "" {
+		return defaultString
+	}
+	return strings.Split(commaSeperatedValues, ",")
+}
+func (app *application) readInt(queryString url.Values, key string, defaultInt int, v *validator.Validator) int {
+
+	strI := queryString.Get(key)
+	if strI == "" {
+		return defaultInt
+	}
+
+	i, err := strconv.Atoi(strI)
+	if err != nil {
+		v.AddError(key, "must be positive integer")
+		return defaultInt
+	}
+
+	return i
 }

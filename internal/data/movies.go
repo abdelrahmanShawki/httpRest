@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/lib/pq"
 	"httpRest/internal/validator"
+	"log"
 	"time"
 )
 
@@ -139,6 +141,58 @@ func (m MovieModel) Delete(id int64) error {
 	return nil
 }
 
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]Movie, Metadata, error) {
+	query := fmt.Sprintf(`SELECT COUNT(*) OVER () , id, created_at, title, year, runtime, genres, version
+			FROM movies
+     	    WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
+			AND (genres @> $2 OR $2 = '{}')
+			ORDER BY %s %s ,  id ASC
+			LIMIT $3 OFFSET $4 `, filters.sortColumn(), filters.sortDirection())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	Movies := []Movie{}
+	args := []interface{}{title, pq.Array(genres), filters.limit(), filters.offset()}
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Println("Error closing rows:", err)
+			return
+		}
+	}(rows)
+
+	total_records := 0
+	for rows.Next() {
+		var movie Movie
+		err := rows.Scan(
+			&total_records,
+			&movie.ID,
+			&movie.CreatedAt,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Version,
+		)
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+		Movies = append(Movies, movie)
+
+	}
+	if err = rows.Err(); err != nil {
+		return nil, Metadata{}, err
+	}
+	metaData := calculateMetadata(total_records, filters.Page, filters.PageSize)
+	return Movies, metaData, nil
+}
+
+// mock work down >>
 type MockMovieModel struct{}
 
 func (m MockMovieModel) Insert(movie *Movie) error {
