@@ -123,11 +123,6 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
-	// read the json
-	// check for error
-	// get the id
-	// get movie by id from data base ,
-	// use new put method from models
 
 	var input struct {
 		Title   string       `json:"title"`
@@ -154,7 +149,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 			app.notFoundResponse(w, r)
 			return
 		}
-		app.logger.Println("Error get movie :", err)
+		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 		return
 	}
@@ -172,14 +167,14 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	err = app.models.Movies.Update(movie)
 	if err != nil {
-		app.logger.Println("Error update :", err)
+		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err = app.writeJson(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		app.logger.Println("Error writing JSON:", err)
+		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 	}
 }
