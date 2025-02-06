@@ -22,6 +22,11 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 
 }
 
+func (app *application) rateLimitResponse(w http.ResponseWriter, r *http.Request) {
+	message := "rate limit exceeded"
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}
+
 func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	//app.logError(r, err)
 	message := "server error response"
