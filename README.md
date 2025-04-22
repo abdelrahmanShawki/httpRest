@@ -32,4 +32,3 @@ This project is a RESTful API built with Go, designed to handle user registratio
 * Handles OS signals for clean server shutdown. ####used Goroutines
 * Waits for background tasks to complete before exiting.
 
-## Project Structure
